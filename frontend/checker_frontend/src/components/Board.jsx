@@ -1,77 +1,107 @@
 import React, { useEffect, useState } from 'react';
 import Tile from './tile';
+import { clearIlluminatePossibleMoves, illuminatePossibleMoves } from '../gamelogic/illuminate';
+import { movekorki } from '../gamelogic/movekorki';
+import { validateMove } from '../gamelogic/validatemove';
 
 const Board = () => {
     const [firstTile, setFirstTile] = useState(null);
     const [secondTile, setSecondTile] = useState(null);
     const [tiles, settiles] = useState([]);
+    const [turn, setturn] = useState('white');
 
-    useEffect(() => {
-        const initialTiles = [];
+    const functocall = (newTiles) => {
+        // console.log('functocall', newTiles);
+        settiles(newTiles);
+    };
 
-        for (let i = 1; i <= 64; i++) {
-            if (i <= 16) {
-                initialTiles.push({ tileId: i, piece: `white` });
-            } else if (i >= 49) {
-                initialTiles.push({ tileId: i, piece: `red` });
-            } else {
-                initialTiles.push({ tileId: i, piece: `empty` });
-            }
-        }
-        settiles(initialTiles);
-
-    }, []);
 
     const handleTileClick = (tileId, event) => {
-        console.log('Tile ' + tileId + ' was clicked. It contains a ' + event.target + ' piece.');
+        // console.log('Tile ' + tileId + ' was clicked. It contains a ' + event.target + ' piece.');
         // if the event target is not a piece, if it's an htmldivelement, then return
-        if (event.target.tagName !== 'IMG' && firstTile === null) {
+        const noteimage = event.target.tagName !== 'IMG';
+        // console.log(noteimage, 'noteimage', event.target.tagName);
+
+        if (noteimage && firstTile === null) {
             console.log('No piece on this tile');
             return;
         }
+        const piece = noteimage ? null : event.target.src.includes('white') ? 'white' : 'red';
 
         if (firstTile === null) {
+            if (piece !== turn) {
+                console.log('Not your turn');
+                return;
+            }
             setFirstTile({ id: tileId, piece: event.target });
             return;
         }
 
         if (secondTile === null) {
-            setSecondTile({ id: tileId, piece: event.target });
+            // console.log('Second tile is null');
+            const check = validateMove(firstTile, tileId);
+            // console.log(check, 'check result');
+            if (!check && !noteimage) {
+                const newTiles = clearIlluminatePossibleMoves(tiles);
+                settiles(newTiles);
+
+                if (piece !== turn) {
+                    console.log('Not your turn');
+                    return;
+                }
+
+                setFirstTile({ id: tileId, piece: event.target });
+                return;
+            };
+            if (check) {
+                setSecondTile({ id: tileId, piece: event.target });
+                return;
+            }
+            console.log('Invalid move');
         }
     };
 
-    const movekorki = (firstTile, secondTile) => {
-        let firstTilePiece = firstTile.piece;
-        
-        // extract the src of the image
-        let firstTilePieceSrc = firstTilePiece.src;
-        const korki = firstTilePieceSrc.includes('white') ? 'white' : 'red';
-        
-        // console.log(firstTilePieceSrc);
-        const updatedTiles = tiles.map((tile) => {
-            if (tile.tileId === firstTile.id) {
-                tile.piece = 'empty';
-            } else if (tile.tileId === secondTile.id) {
-                tile.piece = `${korki}`;
-            }
-            return tile;
-        }
-        );
-        return updatedTiles;
-    }
-
-
-
 
     useEffect(() => {
-        if (firstTile !== null && secondTile !== null) {
-            console.log('Moving from ' + firstTile.id + ' to ' + secondTile.id);
+        const initialTiles = [];
 
-            const newTiles = movekorki(firstTile, secondTile);
+        for (let i = 1; i <= 64; i++) {
+            // make this configuration of checkers pieces
+            let piece = 'empty';
+            const isDarkSquare = (i + Math.floor((i - 1) / 8)) % 2 === 0;
+
+            if (isDarkSquare && i <= 24) {
+                piece = 'white';
+            }
+            if (isDarkSquare && i >= 41) {
+                piece = 'red';
+            }
+           
+            // console.log(piece, 'piece');
+            initialTiles.push({ tileId: i, piece: piece });
+        }
+        settiles(initialTiles);
+
+    }, []);
+
+    useEffect(() => {
+        if (firstTile !== null) {
+            illuminatePossibleMoves(firstTile, tiles, functocall);
+        }
+
+        if (firstTile !== null && secondTile !== null) {
+            // console.log('Moving from ' + firstTile.id + ' to ' + secondTile.id);
+
+            const newTiles = movekorki(firstTile, secondTile, tiles);
+            const clearedTiles = clearIlluminatePossibleMoves(tiles);
+            settiles(clearedTiles);
             // Perform the move logic here
             setFirstTile(null);
             setSecondTile(null);
             settiles(newTiles);
+            setturn(turn === 'white' ? 'red' : 'white')
+
+
         }
     }, [firstTile, secondTile]);
 
@@ -81,6 +111,7 @@ const Board = () => {
             <div className='flex'>
                 {tiles.slice(0, 8).map((tile) => (
                     <Tile key={tile.tileId} tileId={tile.tileId} piece={tile.piece} onclickfunc={handleTileClick} />
+
                 ))}
             </div>
             <div className='flex'>
