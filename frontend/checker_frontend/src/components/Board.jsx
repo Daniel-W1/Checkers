@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import Tile from './tile';
 import { clearIlluminatePossibleMoves, illuminatePossibleMoves } from '../gamelogic/illuminate';
 import { movekorki } from '../gamelogic/movekorki';
-import { validateMove } from '../gamelogic/validatemove';
+import { GameOver, validateMove } from '../gamelogic/validatemove';
+import { CalculateCapturedPieces } from '../gamelogic/other';
 
-const Board = () => {
+const Board = ({functocall_one, functocall_two}) => {
     const [firstTile, setFirstTile] = useState(null);
     const [secondTile, setSecondTile] = useState(null);
     const [tiles, settiles] = useState([]);
     const [turn, setturn] = useState('white');
+    const [possibleMoves, setpossibleMoves] = useState([])
 
     const functocall = (newTiles) => {
         // console.log('functocall', newTiles);
@@ -39,7 +41,7 @@ const Board = () => {
 
         if (secondTile === null) {
             // console.log('Second tile is null');
-            const check = validateMove(firstTile, tileId);
+            const check = validateMove(firstTile, tileId, possibleMoves);
             // console.log(check, 'check result');
             if (!check && !noteimage) {
                 const newTiles = clearIlluminatePossibleMoves(tiles);
@@ -86,28 +88,43 @@ const Board = () => {
 
     useEffect(() => {
         if (firstTile !== null) {
-            illuminatePossibleMoves(firstTile, tiles, functocall);
+            const possibleMoves = illuminatePossibleMoves(firstTile, tiles, functocall);
+            console.log(possibleMoves, 'possibleMoves');
+            setpossibleMoves(possibleMoves);
         }
 
-        if (firstTile !== null && secondTile !== null) {
-            // console.log('Moving from ' + firstTile.id + ' to ' + secondTile.id);
+        // console.log(tiles, 'tiles');
 
-            const newTiles = movekorki(firstTile, secondTile, tiles);
+        if (firstTile !== null && secondTile !== null) {
+            console.log('Moving from ' + firstTile.id + ' to ' + secondTile.id, secondTile.piece, 'piece');
             const clearedTiles = clearIlluminatePossibleMoves(tiles);
             settiles(clearedTiles);
+
+            const newTiles = movekorki(firstTile, secondTile, tiles, possibleMoves);
+            const [redCaptured, whiteCaptured] = CalculateCapturedPieces(newTiles);
+            functocall_one(redCaptured);
+            functocall_two(whiteCaptured);
+
+            const [value, winner] = GameOver(newTiles);
+
+            if (value) {
+                console.log('Game over, winner is ' + winner);
+            }
+
             // Perform the move logic here
             setFirstTile(null);
             setSecondTile(null);
             settiles(newTiles);
             setturn(turn === 'white' ? 'red' : 'white')
-
-
+            
         }
     }, [firstTile, secondTile]);
 
 
+
     return (
-        <div className='flex flex-col justify-center items-center h-screen w-full'>
+    <div className='flex flex-col justify-center items-center border-4 bg-amber-800 border-black py-5 px-5 md:py-10 md:px-10 sm:border-2'>
+        <div className='flex flex-col justify-center items-center'>
             <div className='flex'>
                 {tiles.slice(0, 8).map((tile) => (
                     <Tile key={tile.tileId} tileId={tile.tileId} piece={tile.piece} onclickfunc={handleTileClick} />
@@ -150,6 +167,7 @@ const Board = () => {
                 ))}
             </div>
         </div>
+    </div>
     );
 };
 

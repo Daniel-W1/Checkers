@@ -25,7 +25,7 @@ const Tile = ({ piece, tileId, onclickfunc}) => {
   
 
   return (
-    <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 ${tileColor} border ${padding}`} onClick={(e) => {
+    <div className={`w-10 h-10 sm:w-8 sm:h-12 lg:w-14 lg:h-14 ${tileColor} border ${padding}`} onClick={(e) => {
         // log the key of the tile that was clicked
         onclickfunc(tileId, e)
     }}>

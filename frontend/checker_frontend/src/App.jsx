@@ -1,14 +1,11 @@
 import React from 'react'
-import Tile from './components/tile'
-import Board from './components/board'
+import GameScreen from './pages/gamescreen';
 
 function App() {
-
   return (
-    <div className='flex justify-center items-center h-full w-full'>
-        <Board/>
-    </div>
-  )
+    <GameScreen />
+  );
 }
+
 
 export default App

@@ -1,43 +1,28 @@
-export const validateMove = (firstTile, secondTileid) =>{
+export const validateMove = (firstTile, secondTileid, validMoves) =>{
     const piece = firstTile.piece.src.includes('white') ? 'white' : 'red';
     const tileid = firstTile.id;
     console.log('Validating move');
 
-    if (piece === 'white'){
-        let tileOne = (tileid + 7) <= 64 && (tileid + 7) > 0 ? tileid + 7: null;
-        let tileTwo = (tileid + 9) <= 64 && (tileid + 9) > 0 ? tileid + 9: null;
+    return validMoves.includes(secondTileid);
 
-        if (tileid % 8 === 0){
-            tileTwo = null;
-        }
-        else if ((tileid - 1) % 8 === 0){
-            tileOne = null;
-        }
-
-        if (secondTileid === tileOne || secondTileid === tileTwo){
-            return true;
-        }
-        else{
-            return false;
-        }
-    }
-    else{
-        let tileOne = (tileid - 7) <= 64 && (tileid - 7) > 0 ? tileid - 7: null;
-        let tileTwo = (tileid - 9) <= 64 && (tileid - 9) > 0 ? tileid - 9: null;
-
-        if (tileid % 8 === 0){
-            tileOne = null;
-        }
-        else if ((tileid - 1) % 8 === 0){
-            tileTwo = null;
-        }
-
-        if (secondTileid === tileOne || secondTileid === tileTwo){
-            return true;
-        }
-        else{
-            return false;
-        }
-    }
- 
 }
+
+// in this version of checkers first guy to get to the other side wins
+export const GameOver = (tiles)=>{
+
+    console.log(tiles, 'tiles');
+   for (let i = 0; i < 8; i++){
+       if (tiles[i].piece.includes('red')){
+           return [true, 'red'];
+       }
+   }
+   
+    for (let i = 56; i < 64; i++){
+        if (tiles[i].piece.includes('white')){
+            return [true, 'white'];
+        }
+    }
+
+    return [false, null];
+}
+    
